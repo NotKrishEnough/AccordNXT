@@ -193,6 +193,8 @@ dependencies {
     implementation("com.google.android.flexbox:flexbox:3.0.0")
     implementation("me.zhanghai.android.fastscroll:library:1.3.0")
     implementation("io.coil-kt.coil3:coil:3.1.0")
+    implementation("com.github.teamnewpipe:newpipeextractor:0.26.5")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation(files("../libs/lib-decoder-ffmpeg-release.aar"))
     implementation(projects.recyclerview)
     // --- below does not apply to release builds ---
