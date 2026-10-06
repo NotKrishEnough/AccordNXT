@@ -211,3 +211,5 @@ class YouTubeMusicActivity : ComponentActivity() {
 
     companion object { private const val LOGIN_REQUEST = 4102 }
 }
+
+// CI trigger: build verification
