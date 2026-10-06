@@ -65,7 +65,7 @@ class YouTubeSearchAdapter(
             onStatus("Loading " + track.title + "…")
             fragment.viewLifecycleOwner.lifecycleScope.launch {
                 try {
-                    val url = NewPipeAudioResolver.resolve(track.videoId)
+                    val url = NewPipeAudioResolver.resolveToFile(fragment.requireContext(), track.videoId)
                     val item = mediaItem(track, url)
                     (fragment.requireActivity() as MainActivity).getPlayer()?.apply {
                         setMediaItems(listOf(item), 0, C.TIME_UNSET)
@@ -181,8 +181,9 @@ fun mediaItem(track: OnlineTrack, url: String): MediaItem =
                 .setTitle(track.title)
                 .setArtist(track.author)
                 .apply {
-                    if (track.thumbnail.isNotBlank()) {
-                        setArtworkUri(android.net.Uri.parse(track.thumbnail))
+                    val artwork = thumbnailUrl(track.thumbnail, track.videoId)
+                    if (artwork.isNotBlank()) {
+                        setArtworkUri(android.net.Uri.parse(artwork))
                     }
                 }
                 .setExtras(android.os.Bundle().apply {
