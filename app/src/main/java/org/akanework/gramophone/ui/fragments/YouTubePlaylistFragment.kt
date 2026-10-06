@@ -7,10 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import coil3.load
+import coil3.request.error
+import coil3.request.placeholder
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
@@ -122,14 +126,18 @@ class YouTubePlaylistFragment : BaseFragment(true) {
     private inner class TrackAdapter : RecyclerView.Adapter<TrackAdapter.Holder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             Holder(LinearLayout(parent.context).apply {
-                orientation = LinearLayout.VERTICAL
+                orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(24, 16, 24, 16)
+                setPadding(16, 10, 16, 10)
                 layoutParams = RecyclerView.LayoutParams(-1, -2)
             })
 
         override fun onBindViewHolder(holder: Holder, position: Int) {
             val track = tracks[position]
+            holder.cover.load(track.thumbnail.ifBlank { "https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg" }) {
+                placeholder(org.akanework.gramophone.R.drawable.ic_default_cover)
+                error(org.akanework.gramophone.R.drawable.ic_default_cover)
+            }
             holder.title.text = track.title
             holder.artist.text = track.artist.ifBlank { "YouTube Music" }
             holder.itemView.setOnClickListener { playFrom(position) }
@@ -138,11 +146,21 @@ class YouTubePlaylistFragment : BaseFragment(true) {
         override fun getItemCount() = tracks.size
 
         inner class Holder(view: LinearLayout) : RecyclerView.ViewHolder(view) {
+            val cover = ImageView(view.context).apply {
+                layoutParams = LinearLayout.LayoutParams(56, 56).apply { marginEnd = 16 }
+                scaleType = ImageView.ScaleType.CENTER_CROP
+            }
+            val content = LinearLayout(view.context).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
+            }
             val title = TextView(view.context).apply { textSize = 16f; setTypeface(null, Typeface.NORMAL) }
             val artist = TextView(view.context).apply { textSize = 13f; alpha = 0.7f }
             init {
-                view.addView(title)
-                view.addView(artist)
+                view.addView(cover)
+                view.addView(content)
+                content.addView(title)
+                content.addView(artist)
             }
         }
     }
