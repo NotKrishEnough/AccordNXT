@@ -110,11 +110,11 @@ class YouTubeMusicActivity : ComponentActivity() {
     private fun play(track: OnlineTrack) {
         status.text = "Resolving audio: ${track.title}"
         lifecycleScope.launch {
-            runCatching { api.resolveProgressiveUrl(track.videoId) }
-                .onSuccess { streamUrl ->
+            runCatching { NewPipeAudioResolver.resolveToFile(this@YouTubeMusicActivity, track.videoId) }
+                .onSuccess { streamUri ->
                     val item = MediaItem.Builder()
-                        .setMediaId("yt:${track.videoId}")
-                        .setUri(streamUrl)
+                        .setMediaId("youtube-" + track.videoId)
+                        .setUri(streamUri)
                         .setMediaMetadata(
                             MediaMetadata.Builder()
                                 .setTitle(track.title)
