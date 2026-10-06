@@ -30,6 +30,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.MaterialToolbar
@@ -42,6 +43,8 @@ import org.akanework.gramophone.logic.enableEdgeToEdgePaddingListener
 import org.akanework.gramophone.logic.ui.MyRecyclerView
 import org.akanework.gramophone.ui.LibraryViewModel
 import org.akanework.gramophone.ui.adapters.SongAdapter
+import org.akanework.gramophone.ui.adapters.YouTubeSearchAdapter
+import org.akanework.gramophone.youtube.InnerTubeClient
 
 /**
  * SearchFragment:
@@ -55,6 +58,8 @@ class SearchFragment : BaseFragment(null) {
     private val libraryViewModel: LibraryViewModel by activityViewModels()
     private val filteredList: MutableList<MediaItem> = mutableListOf()
     private lateinit var editText: EditText
+    private lateinit var youtubeAdapter: YouTubeSearchAdapter
+    private val youtube = InnerTubeClient()
 
     @SuppressLint("StringFormatInvalid", "StringFormatMatches")
     override fun onCreateView(
@@ -87,7 +92,10 @@ class SearchFragment : BaseFragment(null) {
         recyclerView.enableEdgeToEdgePaddingListener(ime = true)
         recyclerView.setAppBar(appBarLayout)
         recyclerView.layoutManager = LinearLayoutManager(activity)
-        recyclerView.adapter = songAdapter.concatAdapter
+        youtubeAdapter = YouTubeSearchAdapter(this) { message ->
+            if (isAdded) topAppBar.subtitle = message
+        }
+        recyclerView.adapter = ConcatAdapter(songAdapter.concatAdapter, youtubeAdapter)
 
         // Build FastScroller.
         recyclerView.fastScroll(songAdapter, songAdapter.itemHeightHelper)
@@ -96,9 +104,15 @@ class SearchFragment : BaseFragment(null) {
             // TODO sort results by match quality? (using NaturalOrderHelper)
             if (rawText.isNullOrBlank()) {
                 songAdapter.updateList(listOf(), now = true, true)
+                youtubeAdapter.setItems(emptyList())
             } else {
                 // make sure the user doesn't edit away our text while we are filtering
                 val text = rawText.toString()
+                viewLifecycleOwner.lifecycleScope.launch {
+                    runCatching { youtube.search(text) }
+                        .onSuccess { youtubeAdapter.setItems(it) }
+                        .onFailure { if (isAdded) topAppBar.subtitle = "YouTube search unavailable" }
+                }
                 // Launch a coroutine for searching in the library.
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                     // Clear the list from the last search.

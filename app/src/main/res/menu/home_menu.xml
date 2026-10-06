@@ -12,6 +12,10 @@
         android:title="@string/home_menu_equalizer"
         app:showAsAction="never" />
     <item
+        android:id="@+id/youtube_music"
+        android:title="YouTube Music"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/settings"
         android:icon="@drawable/ic_settings"
         android:title="@string/home_menu_settings"

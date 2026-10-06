@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.lifecycle.lifecycleScope
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.applyGeneralMenuItem
 import org.akanework.gramophone.logic.data.db.entity.PlaylistWithMediaItem
@@ -29,6 +30,9 @@ import org.akanework.gramophone.ui.adapters.HeaderAdapter
 import org.akanework.gramophone.ui.adapters.LibraryCategoryAdapter
 import org.akanework.gramophone.ui.adapters.LibraryHomeAdapter
 import org.akanework.gramophone.ui.components.GridPaddingDecorationLibrary
+import org.akanework.gramophone.ui.adapters.YouTubePlaylistAdapter
+import org.akanework.gramophone.youtube.YouTubePlaylists
+import org.akanework.gramophone.youtube.YouTubeSessionStore
 
 class LibraryFragment : BaseFragment(null), Observer<List<PlaylistWithMediaItem>> {
     private val libraryViewModel: LibraryViewModel by activityViewModels()
@@ -37,6 +41,7 @@ class LibraryFragment : BaseFragment(null), Observer<List<PlaylistWithMediaItem>
     private lateinit var libraryHomeAdapter: LibraryHomeAdapter
     private lateinit var libraryConcatAdapter: ConcatAdapter
     private lateinit var recentlyAddedHeaderAdapter: HeaderAdapter
+    private lateinit var youtubePlaylistAdapter: YouTubePlaylistAdapter
     private var isOccupied = false
 
     data class PlaceHolder(
@@ -73,10 +78,15 @@ class LibraryFragment : BaseFragment(null), Observer<List<PlaylistWithMediaItem>
             == Configuration.ORIENTATION_PORTRAIT
         ) 2 else 4
 
+        youtubePlaylistAdapter = YouTubePlaylistAdapter { playlist ->
+            (requireActivity() as org.akanework.gramophone.ui.MainActivity).startFragment(
+                YouTubePlaylistFragment.newInstance(playlist.id, playlist.title)
+            )
+        }
         libraryCategoryAdapter = LibraryCategoryAdapter(requireContext(), this)
         libraryHomeAdapter = LibraryHomeAdapter(this, requireContext())
         recentlyAddedHeaderAdapter = HeaderAdapter(R.layout.recently_added)
-        libraryConcatAdapter = ConcatAdapter(libraryCategoryAdapter, recentlyAddedHeaderAdapter, libraryHomeAdapter)
+        libraryConcatAdapter = ConcatAdapter(youtubePlaylistAdapter, libraryCategoryAdapter, recentlyAddedHeaderAdapter, libraryHomeAdapter)
 
         appBarLayout = rootView.findViewById(R.id.appbarlayout)
         appBarLayout.enableEdgeToEdgePaddingListener()
@@ -94,7 +104,7 @@ class LibraryFragment : BaseFragment(null), Observer<List<PlaylistWithMediaItem>
             spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                 override fun getSpanSize(position: Int): Int {
                     // BaseDecorAdapter always is full width
-                    return if (position < libraryCategoryAdapter.itemCount + 1) spans else 1
+                    return if (position < youtubePlaylistAdapter.itemCount + libraryCategoryAdapter.itemCount + 1) spans else 1
                 }
             }
         }
@@ -104,8 +114,22 @@ class LibraryFragment : BaseFragment(null), Observer<List<PlaylistWithMediaItem>
         libraryViewModel.privatePlaylistList.observeForever(this)
 
         topAppBar.applyGeneralMenuItem(this, libraryViewModel)
+        loadYouTubePlaylists()
 
         return rootView
+    }
+
+    private fun loadYouTubePlaylists() {
+        val cookies = YouTubeSessionStore.read(requireContext())
+        if (cookies.isNullOrBlank()) {
+            youtubePlaylistAdapter.showDisconnected()
+            return
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching { YouTubePlaylists.fetchFromMusicSession(cookies) }
+                .onSuccess { youtubePlaylistAdapter.setItems(it) }
+                .onFailure { youtubePlaylistAdapter.showDisconnected() }
+        }
     }
 
     override fun onDestroyView() {
@@ -154,7 +178,7 @@ class LibraryFragment : BaseFragment(null), Observer<List<PlaylistWithMediaItem>
 
             if (this@LibraryFragment::libraryConcatAdapter.isInitialized) {
                 withContext(Dispatchers.Main) {
-                    (libraryConcatAdapter.adapters[2] as LibraryHomeAdapter).updateList(
+                    (libraryConcatAdapter.adapters[3] as LibraryHomeAdapter).updateList(
                         libraryViewModel.privateAlbumList
                     )
                 }
