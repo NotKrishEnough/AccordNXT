@@ -55,8 +55,12 @@ class YouTubePlaylistFragment : BaseFragment(true) {
         root.addView(toolbar)
         root.addView(status)
         root.addView(recycler, LinearLayout.LayoutParams(-1, 0, 1f))
-        load()
         return root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        load()
     }
 
     private fun load() {
@@ -66,7 +70,7 @@ class YouTubePlaylistFragment : BaseFragment(true) {
             return
         }
         val playlistId = arguments?.getString(ARG_ID).orEmpty()
-        viewLifecycleOwner.lifecycleScope.launch {
+        lifecycleScope.launch {
             runCatching { YouTubePlaylists.fetchPlaylistTracks(cookies, playlistId) }
                 .onSuccess {
                     tracks.clear()
