@@ -58,6 +58,24 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew :app:assembleRelease
 
+      - name: Sign unsigned APKs for direct installation
+        run: |
+          set -e
+          KEYSTORE="$HOME/.android/debug.keystore"
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$KEYSTORE" ]; then
+            keytool -genkeypair -v -keystore "$KEYSTORE" -storepass android -alias androiddebugkey -keypass android               -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          APKSIGNER="$ANDROID_HOME/build-tools/$(ls -1 "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/apksigner"
+          for apk in app/build/outputs/apk/release/*.apk; do
+            if ! "$APKSIGNER" verify "$apk" >/dev/null 2>&1; then
+              echo "Signing unsigned APK: $apk"
+              "$APKSIGNER" sign --ks "$KEYSTORE" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android "$apk"
+            else
+              echo "Already signed: $apk"
+            fi
+          done
+
       - name: Find apk
         run: |
           echo "APK_FILE_X64=$(find app/build/outputs/apk/release -name '*-x86_64-*.apk')" >> $GITHUB_ENV
