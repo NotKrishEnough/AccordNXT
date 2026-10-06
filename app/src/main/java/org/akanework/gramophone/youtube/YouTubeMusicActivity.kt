@@ -209,3 +209,5 @@ class YouTubeMusicActivity : ComponentActivity() {
 }
 
 // CI trigger: build verification
+
+// CI trigger: signed APK verification
