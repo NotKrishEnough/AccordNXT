@@ -1,5 +1,7 @@
 package org.akanework.gramophone.youtube
 
+import android.content.Context
+import android.net.Uri
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -11,6 +13,7 @@ import org.schabi.newpipe.extractor.localization.Localization
 import org.schabi.newpipe.extractor.stream.StreamInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.ConcurrentHashMap
@@ -74,5 +77,40 @@ object NewPipeAudioResolver {
             .maxByOrNull { it.averageBitrate }
             ?: throw IOException("NewPipe found no direct audio-only stream for this video")
         audio.content.also { streamCache[videoId] = CachedStream(it, now) }
+    }
+
+    /** Cache the extracted stream locally because Accord's playback persistence expects file URIs. */
+    suspend fun resolveToFile(context: Context, videoId: String): Uri = withContext(Dispatchers.IO) {
+        require(videoId.matches(Regex("[A-Za-z0-9_-]{11}"))) { "Invalid YouTube video ID" }
+        val dir = File(context.cacheDir, "youtube_audio").apply { mkdirs() }
+        dir.listFiles()?.firstOrNull { it.name.startsWith("$videoId.") && !it.name.endsWith(".part") && it.length() > 0L }?.let {
+            it.setLastModified(System.currentTimeMillis())
+            return@withContext Uri.fromFile(it)
+        }
+
+        val url = resolve(videoId)
+        val request = okhttp3.Request.Builder()
+            .url(url)
+            .header("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/125.0.0.0 Mobile Safari/537.36")
+            .build()
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("YouTube audio download failed: HTTP ${response.code}")
+            val body = response.body ?: throw IOException("YouTube audio response was empty")
+            val subtype = body.contentType()?.subtype?.lowercase()
+            val extension = when (subtype) {
+                "mp4", "m4a" -> "m4a"
+                "ogg", "opus" -> "opus"
+                else -> "webm"
+            }
+            val target = File(dir, "$videoId.$extension")
+            val partial = File(dir, "$videoId.$extension.part")
+            partial.outputStream().use { output -> body.byteStream().use { input -> input.copyTo(output) } }
+            if (!partial.renameTo(target)) {
+                partial.delete()
+                throw IOException("Could not finalize cached YouTube audio")
+            }
+            target.setLastModified(System.currentTimeMillis())
+            Uri.fromFile(target)
+        }
     }
 }
