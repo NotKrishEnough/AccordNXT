@@ -178,7 +178,7 @@ class LibraryFragment : BaseFragment(null), Observer<List<PlaylistWithMediaItem>
 
             if (this@LibraryFragment::libraryConcatAdapter.isInitialized) {
                 withContext(Dispatchers.Main) {
-                    (libraryConcatAdapter.adapters[2] as LibraryHomeAdapter).updateList(
+                    (libraryConcatAdapter.adapters[3] as LibraryHomeAdapter).updateList(
                         libraryViewModel.privateAlbumList
                     )
                 }
