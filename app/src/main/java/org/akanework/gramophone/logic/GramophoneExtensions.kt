@@ -85,6 +85,7 @@ import org.akanework.gramophone.logic.utils.MediaStoreUtils
 import org.akanework.gramophone.ui.LibraryViewModel
 import org.akanework.gramophone.ui.MainActivity
 import org.akanework.gramophone.ui.components.CustomTextView
+import org.akanework.gramophone.youtube.YouTubeMusicActivity
 import org.akanework.gramophone.ui.components.FullBottomSheet
 import org.akanework.gramophone.ui.fragments.BaseWrapperFragment
 import org.akanework.gramophone.ui.fragments.settings.MainSettingsFragment
@@ -643,6 +644,10 @@ fun MaterialToolbar.applyGeneralMenuItem(
                         snackBar.anchorView = playerLayout
                     snackBar.show()
                 }
+            }
+
+            R.id.youtube_music -> {
+                fragment.startActivity(Intent(fragment.requireContext(), YouTubeMusicActivity::class.java))
             }
 
             R.id.settings -> {
