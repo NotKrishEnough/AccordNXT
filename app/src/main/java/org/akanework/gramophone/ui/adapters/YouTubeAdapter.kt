@@ -137,7 +137,7 @@ class YouTubePlaylistAdapter(
 
 fun mediaItem(track: OnlineTrack, url: String): MediaItem =
     MediaItem.Builder()
-        .setMediaId("youtube:" + track.videoId)
+        .setMediaId("youtube-" + track.videoId)
         .setUri(url)
         .setMediaMetadata(
             MediaMetadata.Builder()
