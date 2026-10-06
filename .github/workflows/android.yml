@@ -2,7 +2,7 @@ name: Android CI
 
 on:
   push:
-    branches: [ "alpha" ]
+    branches: [ "alpha", "youtube-music-integration" ]
     paths-ignore:
       - ".github/**"
       - "!.github/workflows/**"
@@ -12,7 +12,7 @@ on:
       - "*.md"
       - "LICENSE"
   pull_request:
-    branches: [ "alpha" ]
+    branches: [ "alpha", "youtube-music-integration" ]
     paths-ignore:
       - ".github/**"
       - "!.github/workflows/**"
