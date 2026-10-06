@@ -1,12 +1,16 @@
 package org.akanework.gramophone.ui.adapters
 
 import android.graphics.Typeface
+import android.widget.ImageView
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import coil3.load
+import coil3.request.error
+import coil3.request.placeholder
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -18,13 +22,18 @@ import org.akanework.gramophone.youtube.NewPipeAudioResolver
 import org.akanework.gramophone.youtube.OnlineTrack
 import org.akanework.gramophone.youtube.YouTubePlaylist
 
-private fun textRow(parent: ViewGroup): LinearLayout =
+private fun artRow(parent: ViewGroup): LinearLayout =
     LinearLayout(parent.context).apply {
-        orientation = LinearLayout.VERTICAL
+        orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
-        setPadding(24, 16, 24, 16)
+        setPadding(16, 10, 16, 10)
         layoutParams = RecyclerView.LayoutParams(-1, -2)
     }
+
+private fun thumbnailUrl(url: String, videoId: String? = null): String =
+    url.takeIf { it.isNotBlank() }
+        ?: videoId?.takeIf { it.isNotBlank() }?.let { "https://i.ytimg.com/vi/$it/hqdefault.jpg" }
+        ?: ""
 
 class YouTubeSearchAdapter(
     private val fragment: Fragment,
@@ -38,10 +47,14 @@ class YouTubeSearchAdapter(
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = Holder(textRow(parent))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = Holder(artRow(parent))
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val track = items[position]
+        holder.cover.load(thumbnailUrl(track.thumbnail, track.videoId)) {
+            placeholder(R.drawable.ic_default_cover)
+            error(R.drawable.ic_default_cover)
+        }
         holder.title.text = track.title
         holder.title.textSize = 16f
         holder.title.setTypeface(null, Typeface.NORMAL)
@@ -72,11 +85,21 @@ class YouTubeSearchAdapter(
     override fun getItemCount() = items.size
 
     class Holder(view: LinearLayout) : RecyclerView.ViewHolder(view) {
+        val cover = ImageView(view.context).apply {
+            layoutParams = LinearLayout.LayoutParams(56, 56).apply { marginEnd = 16 }
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }
+        val content = LinearLayout(view.context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
+        }
         val title = TextView(view.context)
         val subtitle = TextView(view.context)
         init {
-            view.addView(title)
-            view.addView(subtitle)
+            view.addView(cover)
+            view.addView(content)
+            content.addView(title)
+            content.addView(subtitle)
             subtitle.textSize = 13f
             subtitle.alpha = 0.7f
         }
@@ -116,6 +139,10 @@ class YouTubePlaylistAdapter(
             return
         }
         val playlist = items[position - 1]
+        holder.cover.load(thumbnailUrl(playlist.thumbnail)) {
+            placeholder(R.drawable.ic_default_cover)
+            error(R.drawable.ic_default_cover)
+        }
         holder.title.text = playlist.title
         holder.title.textSize = 16f
         holder.title.setTypeface(null, Typeface.NORMAL)
