@@ -32,12 +32,10 @@ class YouTubeMusicActivity : ComponentActivity() {
             setPadding(20, 20, 20, 20)
         }
 
-        val header = LinearLayout(this).apply {
-            gravity = Gravity.CENTER_VERTICAL
-        }
+        val header = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
         query = EditText(this).apply {
             hint = "Search YouTube Music"
-            singleLine = true
+            setSingleLine(true)
         }
         val search = Button(this).apply {
             text = "Search"
@@ -46,9 +44,7 @@ class YouTubeMusicActivity : ComponentActivity() {
         header.addView(query, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(search)
 
-        val actions = LinearLayout(this).apply {
-            gravity = Gravity.CENTER_VERTICAL
-        }
+        val actions = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
         val account = Button(this).apply {
             text = if (YouTubeSessionStore.read(this@YouTubeMusicActivity).isNullOrBlank()) "Sign in" else "YouTube Music ✓"
             setOnClickListener { signIn() }
