@@ -127,7 +127,7 @@ class YouTubePlaylistAdapter(
 
     override fun getItemCount() = items.size + 1
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = Holder(textRow(parent))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = Holder(artRow(parent))
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         if (position == 0) {
@@ -151,11 +151,21 @@ class YouTubePlaylistAdapter(
     }
 
     class Holder(view: LinearLayout) : RecyclerView.ViewHolder(view) {
+        val cover = ImageView(view.context).apply {
+            layoutParams = LinearLayout.LayoutParams(56, 56).apply { marginEnd = 16 }
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }
+        val content = LinearLayout(view.context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
+        }
         val title = TextView(view.context)
         val subtitle = TextView(view.context)
         init {
-            view.addView(title)
-            view.addView(subtitle)
+            view.addView(cover)
+            view.addView(content)
+            content.addView(title)
+            content.addView(subtitle)
             subtitle.textSize = 13f
             subtitle.alpha = 0.7f
         }
