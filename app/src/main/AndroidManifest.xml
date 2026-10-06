@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Read music files (Android 13 and later) (includes .lrc and thumbnails) -->
     <uses-permission
@@ -63,6 +64,9 @@
                 <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
         </service>
+
+        <activity android:name=".youtube.YouTubeCookieLoginActivity" android:exported="false" />
+        <activity android:name=".youtube.YouTubeMusicActivity" android:exported="false" />
 
         <activity
             android:name=".ui.MainActivity"
