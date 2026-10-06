@@ -24,7 +24,6 @@ private fun textRow(parent: ViewGroup): LinearLayout =
         gravity = Gravity.CENTER_VERTICAL
         setPadding(24, 16, 24, 16)
         layoutParams = RecyclerView.LayoutParams(-1, -2)
-        background = parent.context.getDrawable(R.drawable.selectable_item_background)
     }
 
 class YouTubeSearchAdapter(
