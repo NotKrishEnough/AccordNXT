@@ -99,7 +99,7 @@ class YouTubePlaylistFragment : BaseFragment(true) {
                     }.map { pair ->
                         async {
                             runCatching {
-                                val url = NewPipeAudioResolver.resolve(pair.second.videoId)
+                                val url = NewPipeAudioResolver.resolveToFile(requireContext(), pair.second.videoId)
                                 pair.first to mediaItem(
                                     OnlineTrack(pair.second.videoId, pair.second.title, pair.second.artist, "", pair.second.thumbnail),
                                     url
